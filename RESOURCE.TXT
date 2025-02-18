@@ -1,0 +1,5 @@
+DOC:
+http://www.6502.org/users/obelisk/6502/instructions.html
+
+EMU:
+https://skilldrick.github.io/easy6502/
