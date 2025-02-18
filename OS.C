@@ -47,6 +47,28 @@ void KeSchedule()
 	return;
 }
 
+//
+// Routine Description:
+//		Put a pixel on screen, expects Y to hold position & Accumulator to hold Color.
+//
+void KePutPix()
+{
+	asm volatile("sta $0200, Y");
+	return;
+}
+
+//
+// Routine Description:
+//		Brings the system down in a controlled manner
+//
+void KeBugCheck()
+{
+	asm volatile("lda #$02");
+	KePutPix();
+	asm volatile("iny");
+	asm volatile("jmp KeBugCheck");
+}
+
 // Tasks
 void Task1()
 {
