@@ -1,62 +1,75 @@
-/*++
-; Module name: OS.C
-;
-; Author: Kap Petrov (kappa_)
-;
-; Description:
-;    OS/6 Operating System Demonstration in The C Programming Language
-;
-; Revision History:
-; 
---*/
+//++
+// Module name: OS.C
+//
+// Author: Kap Petrov (kappa_)
+//
+// Description:
+//	OS/6 Operating System
+//
+// Revision History:
+// 
+//--
 
-int x;
-
-void Loop();
-void KeSchedule();
-void Reset();
-void Task1();
-void Task2();
-
+//
+// Routine Description:
+// 		Initialize OS/6
+//
 void Init()
 {
-    x = 0;
-    Loop();
+	asm volatile("ldx #$0");
+	Loop();
 }
 
+//
+// Routine Description:
+//		Loop that should initialize drivers & scheduler
+//
 void Loop()
 {
-    while (1)
-    {
+	while(1)
+	{
 		KeSchedule();
-    }
+	}
 }
 
+//
+// Routine Description:
+//		Round-Robin Scheduler
+//
 void KeSchedule()
 {
-    if (x == 2)
-		Reset();
-
-    if (x == 0)
-		Task1();
-
-    if (x == 1)
-		Task2();
+	asm volatile("cpx #$2");
+	asm volatile("beq Reset");	
+	asm volatile("cpx #$0");
+	asm volatile("beq Task1");
+	asm volatile("cpx #$1");
+	asm volatile("beq Task2");
+	return;
 }
 
+// Tasks
 void Task1()
 {
-	asm volatile("LDA #$05\nSTA $0200");
-	x++;
+	asm volatile("lda #$05");
+	asm volatile("sta $0200");
+	asm volatile("inx");
+	return;
 }
 
 void Task2()
 {
-	asm volatile("LDA #$01\nSTA $0201");
-	x++;
+	asm volatile("lda #$01");
+	asm volatile("sta $0201");
+	asm volatile("inx");
+	return;
 }
 
+//
+// Routine Description:
+//		Reset Task PID to run
+//
 void Reset()
 {
-    x = 0;
+	asm volatile("ldx #$0");
+	return;
 }
