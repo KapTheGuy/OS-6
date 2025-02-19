@@ -49,24 +49,39 @@ void KeSchedule()
 
 //
 // Routine Description:
-//		Put a pixel on screen, expects Y to hold position & Accumulator to hold Color.
-//
-void KePutPix()
-{
-	asm volatile("sta $0200, Y");
-	return;
-}
-
-//
-// Routine Description:
 //		Brings the system down in a controlled manner
 //
 void KeBugCheck()
 {
+	// Warning: Hacky bullshit ahead!
+	asm volatile("cpy #255");
+	asm volatile("beq InitP2");
 	asm volatile("lda #$02");
-	KePutPix();
+	asm volatile("sta $0200, Y");
 	asm volatile("iny");
 	asm volatile("jmp KeBugCheck");
+	asm volatile("InitP2:");
+	asm volatile("	ldy #$00");
+	asm volatile("	jmp Page2");
+	asm volatile("Page2:");
+	asm volatile("	cpy #255");
+	asm volatile("	beq InitP3");
+	asm volatile("	sta $0300, Y");
+	asm volatile("	iny");
+	asm volatile("	jmp Page2");
+	asm volatile("InitP3:");
+	asm volatile("	ldy #$00");
+	asm volatile("	jmp Page3");
+	asm volatile("Page3:");
+	asm volatile("	cpy #255");
+	asm volatile("	beq Page4");
+	asm volatile("	sta $0400, Y");
+	asm volatile("	iny");
+	asm volatile("	jmp Page3");
+	asm volatile("Page4:");
+	asm volatile("	sta $0500, Y");
+	asm volatile("	iny");
+	asm volatile("	jmp Page4");
 }
 
 // Tasks
