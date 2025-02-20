@@ -4,7 +4,7 @@
 // Author: Kap Petrov (kappa_)
 //
 // Description:
-//	OS/6 Operating System
+//	OS/6 Operating System for SC6
 //
 // Revision History:
 // 
@@ -17,6 +17,11 @@
 void Init()
 {
 	asm volatile("ldx #$0");
+	// User or Kernel Mode?
+	// 00 is Kernel
+	// 01 is User
+	#WRITE 00 0100
+	
 	Loop();
 }
 
@@ -26,6 +31,9 @@ void Init()
 //
 void Loop()
 {
+	// Initialize User Mode
+	#WRITE 01 0100
+
 	while(1)
 	{
 		KeSchedule();
@@ -38,6 +46,9 @@ void Loop()
 //
 void KeSchedule()
 {
+	asm volatile("lda $0100");
+	asm volatile("cmp #$00");
+	asm volatile("beq KeBugCheck");
 	asm volatile("cpx #$2");
 	asm volatile("beq Reset");	
 	asm volatile("cpx #$0");
@@ -64,39 +75,77 @@ void KeBugCheck()
 	asm volatile("	ldy #$00");
 	asm volatile("	jmp Page2");
 	asm volatile("Page2:");
-	asm volatile("	cpy #255");
-	asm volatile("	beq InitP3");
 	asm volatile("	sta $0300, Y");
 	asm volatile("	iny");
 	asm volatile("	jmp Page2");
-	asm volatile("InitP3:");
-	asm volatile("	ldy #$00");
-	asm volatile("	jmp Page3");
-	asm volatile("Page3:");
-	asm volatile("	cpy #255");
-	asm volatile("	beq Page4");
-	asm volatile("	sta $0400, Y");
-	asm volatile("	iny");
-	asm volatile("	jmp Page3");
-	asm volatile("Page4:");
-	asm volatile("	sta $0500, Y");
-	asm volatile("	iny");
-	asm volatile("	jmp Page4");
 }
 
-// Tasks
+void Right()
+{
+	asm volatile("iny");
+	asm volatile("lda #$00");
+	asm volatile("sta $ff");
+	return;
+}
+
+void Left()
+{
+	asm volatile("dey");
+	asm volatile("lda #$00");
+	asm volatile("sta $ff");
+	return;
+}
+
+void Down()
+{
+	asm volatile("txa");
+	asm volatile("ldx #32");
+	asm volatile("IncLoop:");
+	asm volatile("	iny");
+	asm volatile("	dex");
+	asm volatile("	cpx #00");
+	asm volatile("	bne IncLoop");
+	asm volatile("tax");
+	asm volatile("lda #$00");
+	asm volatile("sta $ff");
+	return;
+}
+
+void Up()
+{
+	asm volatile("txa");
+	asm volatile("ldx #32");
+	asm volatile("IncLoop2:");
+	asm volatile("	dey");
+	asm volatile("	dex");
+	asm volatile("	cpx #00");
+	asm volatile("	bne IncLoop2");
+	asm volatile("tax");
+	asm volatile("lda #$00");
+	asm volatile("sta $ff");
+	return;
+}
+
 void Task1()
 {
-	asm volatile("lda #$05");
-	asm volatile("sta $0200");
+	#WRITE 05 0200
+	asm volatile("lda $ff");
+	asm volatile("cmp #$64");
+	asm volatile("beq Right");
+	asm volatile("cmp #$61");
+	asm volatile("beq Left");
+	asm volatile("cmp #$73");
+	asm volatile("beq Down");
+	asm volatile("cmp #$77");
+	asm volatile("beq Up");
 	asm volatile("inx");
 	return;
 }
 
 void Task2()
 {
-	asm volatile("lda #$01");
-	asm volatile("sta $0201");
+	asm volatile("lda #$06");
+	asm volatile("sta $0201, Y");
 	asm volatile("inx");
 	return;
 }
