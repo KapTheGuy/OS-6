@@ -16,11 +16,9 @@
 //
 void Init()
 {
+	// This is kind of pointless,
+	// but i'll keep it for the funni.
 	asm volatile("ldx #$0");
-	// User or Kernel Mode?
-	// 00 is Kernel
-	// 01 is User
-	#WRITE 00 0100
 	
 	Loop();
 }
@@ -31,9 +29,6 @@ void Init()
 //
 void Loop()
 {
-	// Initialize User Mode
-	#WRITE 01 0100
-
 	while(1)
 	{
 		KeSchedule();
@@ -46,11 +41,10 @@ void Loop()
 //
 void KeSchedule()
 {
-	asm volatile("lda $0100");
-	asm volatile("cmp #$00");
-	asm volatile("beq KeBugCheck");
+	// If task counter is 2, then reset the task counter.
 	asm volatile("cpx #$2");
-	asm volatile("beq Reset");	
+	asm volatile("beq Reset");
+
 	asm volatile("cpx #$0");
 	asm volatile("beq Task1");
 	asm volatile("cpx #$1");
@@ -80,72 +74,33 @@ void KeBugCheck()
 	asm volatile("	jmp Page2");
 }
 
-void Right()
-{
-	asm volatile("iny");
-	asm volatile("lda #$00");
-	asm volatile("sta $ff");
-	return;
-}
-
-void Left()
-{
-	asm volatile("dey");
-	asm volatile("lda #$00");
-	asm volatile("sta $ff");
-	return;
-}
-
-void Down()
-{
-	asm volatile("txa");
-	asm volatile("ldx #32");
-	asm volatile("IncLoop:");
-	asm volatile("	iny");
-	asm volatile("	dex");
-	asm volatile("	cpx #00");
-	asm volatile("	bne IncLoop");
-	asm volatile("tax");
-	asm volatile("lda #$00");
-	asm volatile("sta $ff");
-	return;
-}
-
-void Up()
-{
-	asm volatile("txa");
-	asm volatile("ldx #32");
-	asm volatile("IncLoop2:");
-	asm volatile("	dey");
-	asm volatile("	dex");
-	asm volatile("	cpx #00");
-	asm volatile("	bne IncLoop2");
-	asm volatile("tax");
-	asm volatile("lda #$00");
-	asm volatile("sta $ff");
-	return;
-}
-
 void Task1()
 {
-	#WRITE 05 0200
+	// Load in last key press, if it's Q, render a white pixel at 0 0.
 	asm volatile("lda $ff");
-	asm volatile("cmp #$64");
-	asm volatile("beq Right");
-	asm volatile("cmp #$61");
-	asm volatile("beq Left");
-	asm volatile("cmp #$73");
-	asm volatile("beq Down");
-	asm volatile("cmp #$77");
-	asm volatile("beq Up");
+	asm volatile("cmp #$71");
+	asm volatile("bne Task1");
+	#WRITE 01 0200
 	asm volatile("inx");
 	return;
 }
 
 void Task2()
 {
-	asm volatile("lda #$06");
-	asm volatile("sta $0201, Y");
+	// Address 0x0101 is where the text buffer is stored.
+	asm volatile("lda $ff");
+	asm volatile("lda $0101");
+	asm volatile("sta $0100");
+	asm volatile("lda $ff");
+	asm volatile("sta $0101");
+	asm volatile("lda $0100");
+	asm volatile("cmp #$71");
+	asm volatile("bne Task2");
+	asm volatile("lda $0101");
+	asm volatile("cmp #$0d");
+	asm volatile("bne Task2");
+	asm volatile("jmp KeBugCheck");
+
 	asm volatile("inx");
 	return;
 }
